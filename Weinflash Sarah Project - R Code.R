@@ -1,0 +1,879 @@
+library(ggplot2)
+library(ggpubr)
+library(mgcv)
+library(tree)
+library(DAAG)
+library(glmnet)
+
+#Q1D
+
+q1d <- file.choose() #Weinflash Sarah Project - Q1D.csv
+q1d <- read.csv(q1d)
+q1d <- na.omit(q1d)
+q1d <- q1d[,1:6]
+q1d$Date <- as.Date(q1d$Date, format='%m/%d/%y')pairs(q1d)
+
+#Q2A
+
+q2a <- file.choose() #Weinflash Sarah Project - Q2A.csv
+q2a <- read.csv(q2a)
+q2a <- q2a[,1:10]
+q2a$Date <- as.Date(q2a$Date, format='%m/%d/%y')
+q2a <- na.omit(q2a)
+
+ggplot(q2a, aes(Risk, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm') + #uses method = gam
+xlab('Risk') +
+ylab('Return') +
+ggtitle('Risk vs Return')
+
+Date_Risk_GAM <- gam(q2a$Risk~s(as.numeric(q2a$Date)), sp=0.6)
+anova(Date_Risk_GAM)
+summary.gam(Date_Risk_GAM)
+coef(Date_Risk_GAM)
+
+Date_Ret_GAM <- gam(q2a$Return~s(as.numeric(q2a$Date)), sp=0.6)
+anova(Date_Ret_GAM)
+summary.gam(Date_Ret_GAM)
+coef(Date_Ret_GAM)
+
+ggplot(q2a, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') + 
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation') +
+stat_cor(label.y = 1.25, color='steelblue4') +
+stat_regline_equation(label.y = 1.5, color='steelblue4') +
+annotate('text', x=as.Date('2009-02-01'), y=-2.75, label='y= -0.77 + (0.59 * x) + (0.53 * x^2) - (0.14 * x^3) + (0.45 * x^4)\n- (0.11 * x^5) - (0.41 * x^6) - (0.25 * x^7) + (0.77 * x^8) + (0.33 * x^9)\nR = 0.74, p < 2e-16', color='darkred', size=4, hjust=0) 
+
+ggplot(q2a, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') +
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation') +
+stat_cor(label.y = 12, color='steelblue4') +
+stat_regline_equation(label.y = 14, color='steelblue4') +
+annotate('text', x=as.Date('2006-02-01'), y=-10, label='y= 0.08 - (0.05 * x) - (0.28 * x^2) + (0.02 * x^3) - (0.10 * x^4)\n - (0.07 * x^5) + (0.08 * x^6) - (0.03 * x^7) - (0.26 * x^8) - (0.18 * x^9)\n R = -0.0007, p = 0.945', color='darkred', size=3, hjust=0)
+
+Date_Risk_lm <- lm(q2a$Risk~as.numeric(q2a$Date))
+Date_Ret_lm <- lm(q2a$Return~as.numeric(q2a$Date))
+plot(Date_Risk_lm)
+plot(Date_Ret_lm)
+#Q2B
+
+ggplot(q2a, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') + 
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation') +
+stat_cor(label.y = 1.25, color='steelblue4') +
+stat_regline_equation(label.y = 1.5, color='steelblue4') +
+annotate('text', x=as.Date('2009-02-01'), y=-2.75, label='y= -0.77 + (0.59 * x) + (0.53 * x^2) - (0.14 * x^3) + (0.45 * x^4)\n- (0.11 * x^5) - (0.41 * x^6) - (0.25 * x^7) + (0.77 * x^8) + (0.33 * x^9)\nR = 0.74, p < 2e-16', color='darkred', size=4, hjust=0) +
+geom_vline(xintercept=as.Date('2007-03-01', color='darkgreen', alpha=0.5)) +
+geom_vline(xintercept=as.Date('2007-08-06', color='darkgreen', alpha=0.5)) + 
+geom_vline(xintercept=as.Date('2011-12-14', color='darkgreen', alpha=0.5)) +
+geom_vline(xintercept=as.Date('2012-05-09', color='darkgreen', alpha=0.5))
+
+ggplot(q2a, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') +
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation') +
+stat_cor(label.y = 12, color='steelblue4') +
+stat_regline_equation(label.y = 14, color='steelblue4') +
+annotate('text', x=as.Date('2006-02-01'), y=-10, label='y= 0.08 - (0.05 * x) - (0.28 * x^2) + (0.02 * x^3) - (0.10 * x^4)\n - (0.07 * x^5) + (0.08 * x^6) - (0.03 * x^7) - (0.26 * x^8) - (0.18 * x^9)\n R = -0.0007, p = 0.945', color='darkred', size=3, hjust=0) +
+geom_vline(xintercept=as.Date('2007-03-01', color='darkgreen', alpha=0.5)) +
+geom_vline(xintercept=as.Date('2007-08-06', color='darkgreen', alpha=0.5)) + 
+geom_vline(xintercept=as.Date('2011-12-14', color='darkgreen', alpha=0.5)) +
+geom_vline(xintercept=as.Date('2012-05-09', color='darkgreen', alpha=0.5))
+
+q2b <- q2a[300:400,]
+
+Date_Risk_GAM <- gam(q2b$Risk~s(as.numeric(q2b$Date)), sp=0.6)
+anova(Date_Risk_GAM)
+summary.gam(Date_Risk_GAM)
+coef(Date_Risk_GAM)
+
+ggplot(q2b, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') + 
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation \nObservations 300 thru 400') +
+stat_cor(label.y = 1.25, color='steelblue4') +
+stat_regline_equation(label.y = 1.5, color='steelblue4') +
+annotate('text', x=as.Date('2007-03-10'), y=0.5, label='R = 0.741, p = < 2e-16', color='darkred', size=4, hjust=0)
+
+Date_Ret_GAM <- gam(q2b$Return~s(as.numeric(q2b$Date)), sp=0.6)
+anova(Date_Ret_GAM)
+summary.gam(Date_Ret_GAM)
+coef(Date_Ret_GAM)
+
+ggplot(q2b, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') + 
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation \nObservations 300 thru 400') +
+stat_cor(label.y = 5, color='steelblue4') +
+stat_regline_equation(label.y = 6, color='steelblue4') + 
+annotate('text', x=as.Date('2007-03-10'), y=4, label='R = -0.003, p = 0.817', color='darkred', size=4, hjust=0)
+
+q2b <- q2a[1500:1600,]
+
+Date_Risk_GAM <- gam(q2b$Risk~s(as.numeric(q2b$Date)), sp=0.6)
+anova(Date_Risk_GAM)
+summary.gam(Date_Risk_GAM)
+coef(Date_Risk_GAM)
+
+ggplot(q2b, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') + 
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation \nObservations 1500 thru 1600') +
+stat_cor(label.y = 1.25, color='steelblue4') +
+stat_regline_equation(label.y = 1.5, color='steelblue4') +
+annotate('text', x=as.Date('2011-12-10'), y=0.5, label='R = -0.006, p = 0.767', color='darkred', size=4, hjust=0)
+
+Date_Ret_GAM <- gam(q2b$Return~s(as.numeric(q2b$Date)), sp=0.6)
+anova(Date_Ret_GAM)
+summary.gam(Date_Ret_GAM)
+coef(Date_Ret_GAM)
+
+ggplot(q2b, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') + 
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation \nObservations 1500 thru 1600') +
+stat_cor(label.y = 5, color='steelblue4') +
+stat_regline_equation(label.y = 6, color='steelblue4') +
+annotate('text', x=as.Date('2011-12-10'), y=4, label='R = -0.012, p = 0.862', color='darkred', size=4, hjust=0)
+
+#Q2C
+
+q2c <- q2a[1000:1300,]
+
+#Risk - Lambda = 0.1
+Date_Risk_GAM <- gam(q2c$Risk~s(as.numeric(q2c$Date)), sp=0.1)
+summary.gam(Date_Risk_GAM)
+ggplot(q2c, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=0.1)) + 
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation \nObservations 1000 thru 1300 \nLamda = 0.1') +
+stat_cor(label.y = 1.25, color='steelblue4') +
+stat_regline_equation(label.y = 1.5, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=0.5, label='R = 0.226, p = < 2e-16', color='darkred', size=4, hjust=0)
+
+#Risk - Lambda = 10
+Date_Risk_GAM <- gam(q2c$Risk~s(as.numeric(q2c$Date)), sp=10)
+summary.gam(Date_Risk_GAM)
+ggplot(q2c, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=10)) + 
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation \nObservations 1000 thru 1300 \nLamda = 10') +
+stat_cor(label.y = 1.25, color='steelblue4') +
+stat_regline_equation(label.y = 1.5, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=0.5, label='R = 0.097, p = 1.8e-0.5', color='darkred', size=4, hjust=0)
+
+#Risk - Lambda = 100
+Date_Risk_GAM <- gam(q2c$Risk~s(as.numeric(q2c$Date)), sp=100)
+summary.gam(Date_Risk_GAM)
+ggplot(q2c, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=100)) + 
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation \nObservations 1000 thru 1300 \nLamda = 100') +
+stat_cor(label.y = 1.25, color='steelblue4') +
+stat_regline_equation(label.y = 1.5, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=0.5, label='R = 0.038, p = 0.017', color='darkred', size=4, hjust=0)
+
+#Risk - Lambda = 1000
+Date_Risk_GAM <- gam(q2c$Risk~s(as.numeric(q2c$Date)), sp=1000)
+summary.gam(Date_Risk_GAM)
+ggplot(q2c, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=1000)) + 
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation \nObservations 1000 thru 1300 \nLamda = 1000') +
+stat_cor(label.y = 1.25, color='steelblue4') +
+stat_regline_equation(label.y = 1.5, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=0.5, label='R = 0.022, p = 0.01', color='darkred', size=4, hjust=0)
+
+#Return - Lambda = 0.1
+Date_Ret_GAM <- gam(q2c$Return~s(as.numeric(q2c$Date)), sp=0.1)
+summary.gam(Date_Ret_GAM)
+ggplot(q2c, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=0.1)) + 
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation \nObservations 1000 thru 1300 \nLamda = 0.1') +
+stat_cor(label.y = 5, color='steelblue4') +
+stat_regline_equation(label.y = 6, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=4, label='R = 0.009, p = 0.364', color='darkred', size=4, hjust=0)
+
+#Return - Lambda = 10
+Date_Ret_GAM <- gam(q2c$Return~s(as.numeric(q2c$Date)), sp=10)
+summary.gam(Date_Ret_GAM)
+ggplot(q2c, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=10)) + 
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation \nObservations 1000 thru 1300 \nLamda = 10') +
+stat_cor(label.y = 5, color='steelblue4') +
+stat_regline_equation(label.y = 6, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=4, label='R = -0.005, p = 0.943', color='darkred', size=4, hjust=0)
+
+#Return - Lambda = 100
+Date_Ret_GAM <- gam(q2c$Return~s(as.numeric(q2c$Date)), sp=100)
+summary.gam(Date_Ret_GAM)
+ggplot(q2c, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=100)) + 
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation \nObservations 1000 thru 1300 \nLamda = 100') +
+stat_cor(label.y = 5, color='steelblue4') +
+stat_regline_equation(label.y = 6, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=4, label='R = -0.003, p = 0.901', color='darkred', size=4, hjust=0)
+
+#Return - Lambda = 1000
+Date_Ret_GAM <- gam(q2c$Return~s(as.numeric(q2c$Date)), sp=1000)
+summary.gam(Date_Ret_GAM)
+ggplot(q2c, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=1000)) + 
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation \nObservations 1000 thru 1300 \nLamda = 1000') +
+stat_cor(label.y = 5, color='steelblue4') +
+stat_regline_equation(label.y = 6, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=4, label='R = -0.003, p = 0.805', color='darkred', size=4, hjust=0)
+
+q2c <- q2a[1000:10000,]
+
+#Risk - Lamda = 0.1
+Date_Risk_GAM <- gam(q2c$Risk~s(as.numeric(q2c$Date)), sp=0.1)
+summary.gam(Date_Risk_GAM)
+ggplot(q2c, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=0.1)) + 
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation \nObservations 1000 thru 10000 \nLamda = 0.1') +
+stat_cor(label.y = 1.25, color='steelblue4') +
+stat_regline_equation(label.y = 1.5, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=0.5, label='R = 0.704, p = < 2e-16', color='darkred', size=4, hjust=0)
+
+#Risk - Lambda = 1000
+Date_Risk_GAM <- gam(q2c$Risk~s(as.numeric(q2c$Date)), sp=1000)
+summary.gam(Date_Risk_GAM)
+ggplot(q2c, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=1000)) + 
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation \nObservations 1000 thru 10000 \nLamda = 1000') +
+stat_cor(label.y = 1.25, color='steelblue4') +
+stat_regline_equation(label.y = 1.5, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=0.5, label='R = 0.688, p = < 2e-16', color='darkred', size=4, hjust=0)
+
+#Return - Lambda = 0.1
+Date_Ret_GAM <- gam(q2c$Return~s(as.numeric(q2c$Date)), sp=0.1)
+summary.gam(Date_Ret_GAM)
+ggplot(q2c, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=0.1)) + 
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation \nObservations 1000 thru 10000 \nLamda = 0.1') +
+stat_cor(label.y = 9, color='steelblue4') +
+stat_regline_equation(label.y = 10, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=8, label='R = -0.006, p = 0.833', color='darkred', size=4, hjust=0)
+
+#Return - Lambda = 1000
+Date_Ret_GAM <- gam(q2c$Return~s(as.numeric(q2c$Date)), sp=1000)
+summary.gam(Date_Ret_GAM)
+ggplot(q2c, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred', formula=y~s(x, bs='cs', sp=1000)) + 
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation \nObservations 1000 thru 10000 \nLamda = 1000') +
+stat_cor(label.y = 9, color='steelblue4') +
+stat_regline_equation(label.y = 10, color='steelblue4') +
+annotate('text', x=as.Date('2009-12-25'), y=8, label='R = -1.55e-05, p = 0.373', color='darkred', size=4, hjust=0)
+
+#Q3A
+
+q3a <- q2a[sample(1:nrow(q2a),400),]
+q3a$Date <- as.numeric(q3a$Date)
+Recession <- ifelse((as.numeric(q3a$Date) <= 14399) & (as.numeric(q3a$Date) >= 13851), 1, 0)
+RecessionData = data.frame(q3a, Recession)
+
+#Risk
+	#Create Tree
+RecessionDataTree = tree(Recession~Risk, data=RecessionData)
+summary(RecessionDataTree)
+	#Plot Full Tree
+plot(RecessionDataTree) + title(main='Classification Tree - Risk')
+text(RecessionDataTree, pretty=0)
+	#Find the Ideal Number of Branches
+cv.RecessionDataTree <- cv.tree(RecessionDataTree)
+plot(cv.RecessionDataTree$size, cv.RecessionDataTree$dev, type='b', main='Size vs Deviance - Risk', xlab='Size', ylab='Deviance') 
+	#Prune Tree
+prune.RecessionData = prune.tree(RecessionDataTree, best=2)
+	#Plot Pruned Tree
+plot(prune.RecessionData) + title(main='Pruned Classification Tree - Risk')
+text(prune.RecessionData)
+	#Plot Data with Lines of Pruned Tree
+ggplot(RecessionData, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') +
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation - Decision Tree') +
+geom_hline(yintercept=(-0.676294), color='darkgreen', alpha=0.5) +
+geom_vline(xintercept=14399, color='darkgreen', alpha=0.5) +
+geom_vline(xintercept=13851, color='darkgreen', alpha=0.5)
+	#Split Data into Training/Testing
+training.rows = sample(nrow(RecessionData), size=(nrow(RecessionData)/2))
+train = RecessionData[training.rows,]
+test = RecessionData[-training.rows,]
+	#Generate Y-hat
+yhat = predict(RecessionDataTree, newdata=test)
+	#Plot Y-hat vs Risk
+plot(yhat, test$Risk, main='Recession Probability by Risk', xlab='Recession Probability', ylab='Risk')
+abline(0,1)
+	#Table of Accurate vs Inaccurate Predictions
+with(test, table(round(yhat),Recession))
+	#Find MSE
+mean((yhat - test$Risk)^2)
+sqrt(mean((yhat - test$Risk)^2))
+
+
+#Return
+	#Create Tree
+RecessionDataTree = tree(Recession~Return, data=RecessionData)
+summary(RecessionDataTree)
+	#Plot Full Tree
+plot(RecessionDataTree) + title(main='Classification Tree - Returns')
+text(RecessionDataTree, pretty=0)
+	#Find ideal number of branches
+cv.RecessionDataTree <- cv.tree(RecessionDataTree)
+plot(cv.RecessionDataTree$size, cv.RecessionDataTree$dev, type='b', main='Size vs Deviance - Return', xlab='Size', ylab='Deviance')
+	#Prune tree
+prune.RecessionData = prune.tree(RecessionDataTree, best=3)
+	#Plot pruned tree
+plot(prune.RecessionData) + title(main='Pruned Classification Tree - Returns')
+text(prune.RecessionData)
+	#Plot data with lines of pruned tree
+ggplot(RecessionData, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') +
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation - Decision Tree') +
+geom_hline(yintercept=(4.092), color='darkgreen', alpha=0.5) +
+geom_hline(yintercept=(-4.136), color='darkgreen', alpha=0.5) +
+geom_vline(xintercept=14399, color='darkgreen', alpha=0.5) +
+geom_vline(xintercept=13851, color='darkgreen', alpha=0.5)
+	#create training/testing data
+training.rows = sample(nrow(RecessionData), size=(nrow(RecessionData)/2))
+train = RecessionData[training.rows,]
+test = RecessionData[-training.rows,]
+	#create yhat
+yhat = predict(RecessionDataTree, newdata=test)
+	#plot yhat vs Returns
+plot(yhat, test$Return, main='Recession Probability by Returns', xlab='Recession Probability', ylab='Returns')
+abline(0,1)
+	#Table of Accurate vs Inaccurate Predictions
+with(test, table(round(yhat),Recession))
+	#find MSFE
+mean((yhat - test$Return)^2)
+sqrt(mean((yhat - test$Return)^2))
+
+#Q3B
+
+ggplot(RecessionData, aes(Date, Return)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') +
+xlab('Date') +
+ylab('Return') +
+ggtitle('Date vs Return - A.O. Smith Corporation - with Recession Dates') +
+geom_vline(xintercept=14399, color='darkgreen', alpha=0.5) +
+geom_vline(xintercept=13851, color='darkgreen', alpha=0.5)
+
+ggplot(RecessionData, aes(Date, Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') +
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation - with Recession Dates') +
+geom_vline(xintercept=14399, color='darkgreen', alpha=0.5) +
+geom_vline(xintercept=13851, color='darkgreen', alpha=0.5)
+
+
+Recession <- ifelse((as.numeric(q2a$Date) <= 14399) & (as.numeric(q2a$Date) >= 13851), 1, 0)
+q3b = data.frame(q2a, Recession)
+q3b = subset(q3b, Recession==1)
+
+	#Means
+mean(q3a$Return) 
+mean(q3b$Return) 
+mean(q3a$Risk) 
+mean(q3b$Risk) 
+	#Medians
+median(q3a$Return)
+median(q3b$Return) 
+median(q3a$Risk) 
+median(q3b$Risk) 
+	#Linear Models 
+lmRisk <- lm(Risk~Date, data=q2a)
+lmReturn <- lm(Return~Date, data=q2a)
+lmRisk$fitted.values[600]
+lmReturn$fitted.values[600]
+median(lmRisk$fitted.values)
+median(lmReturn$fitted.values)
+	#GAMs
+Date_Risk_GAM$fitted.values[600]
+Date_Ret_GAM$fitted.values[600]
+median(Date_Risk_GAM$fitted.values)
+median(Date_Ret_GAM$fitted.values)
+	#CARTs
+q3b = data.frame(q2a, Recession)
+	#CARTs - Risk
+RecessionDataTree = tree(Risk~Recession, data=q3b)
+cv.RecessionDataTree <- cv.tree(RecessionDataTree)
+plot(cv.RecessionDataTree$size, cv.RecessionDataTree$dev, type='b', main='Size vs Deviance - Risk', xlab='Size', ylab='Deviance') 
+prune.RecessionData = prune.tree(RecessionDataTree, best=2)
+plot(prune.RecessionData) + title(main='Pruned Classification Tree - Risk')
+text(prune.RecessionData)
+	#CARTs - Return
+RecessionDataTree = tree(Return~Recession, data=q3b)
+	#MSE
+mean((lmRisk$residuals)^2)
+mean((lmReturn$residuals)^2)
+mean((Date_Risk_GAM$residuals)^2)
+mean((Date_Ret_GAM$residuals)^2)
+summary(prune.RecessionDataTree)
+summary(RecessionDataTree)
+
+	#CART - no restrictions
+risktree = tree(Risk~as.numeric(Date), data=q2a)
+cv.risktree <- cv.tree(risktree)
+plot(cv.risktree$size, cv.risktree$dev, type='b', main='Size vs Deviance - Risk', xlab='Size', ylab='Deviance')
+prune.risktree = prune.tree(risktree, best=5)
+plot(prune.risktree) + title(main='Pruned Classification Tree - Risk')
+text(prune.risktree)
+summary(prune.risktree)
+	#step chart
+x = c(13000, 13711.5, 15474.5, 16613.5, 17554.5, 19000)
+y = c(-1.899, -1.512, -0.9883, -0.2946, 0.1922, 0.1922)
+xy = data.frame(x,y)
+ggplot(q2a, aes(as.numeric(Date), Risk)) +
+geom_point(color='black', alpha=0.2) +
+geom_smooth(method='lm', color='steelblue4') + 
+geom_smooth(method='gam', color='darkred') +
+geom_step(data=xy, aes(x,y), color='green', linewidth=1.5) +
+xlab('Date') +
+ylab('Risk') +
+ggtitle('Date vs Risk - A.O. Smith Corporation - CART')
+
+#Q4A
+q4a <- file.choose()
+q4a <- read.csv(q4a)
+q4a <- na.omit(q4a)
+q4a <- q4a[sample(1:nrow(q4a),1000),]
+q4a$ARREST_DATE <- as.Date(q4a$ARREST_DATE, format='%m/%d/%y')
+
+unique(q4a$PD_DESC)
+unique(q4a$OFNS_DESC)
+
+q4a$PD_CD <- factor(q4a$PD_CD)
+q4a$KY_CD <- factor(q4a$KY_CD)
+q4a$ARREST_BORO <- factor(q4a$ARREST_BORO)
+q4a$ARREST_PRECINCT <- factor(q4a$ARREST_PRECINCT)
+q4a$AGE_GROUP <- factor(q4a$AGE_GROUP, levels=c('<18', '18-24', '25-44', '45-64', '65+'), ordered=TRUE)
+q4a$PERP_SEX <- factor(q4a$PERP_SEX)
+
+for(i in 1:length(q4a$JURISDICTION_CODE)) {
+	if(q4a$JURISDICTION_CODE[i] == 0) {next}
+	else if (q4a$JURISDICTION_CODE[i] == 1) {next}
+	else if (q4a$JURISDICTION_CODE[i] == 2) {next}
+	q4a$JURISDICTION_CODE[i] = 3
+}
+q4a$JURISDICTION_CODE <- factor(q4a$JURISDICTION_CODE)
+
+for(i in 1:length(q4a$PERP_RACE)) {
+	if(q4a$PERP_RACE[i] == 'AMERICAN INDIAN/ALASKAN NATIVE') { 
+		q4a$PERP_RACE[i] = 'NATIVE'}
+	if(q4a$PERP_RACE[i] == 'ASIAN / PACIFIC ISLANDER') {
+		q4a$PERP_RACE[i] = 'AAPI'
+	}
+}
+q4a$PERP_RACE <- factor(q4a$PERP_RACE)
+
+for(i in 1:length(q4a$LAW_CAT_CD)) {
+	if(q4a$LAW_CAT_CD[i] == '') { 
+		q4a$LAW_CAT_CD[i] = 'I'}
+}
+q4a$LAW_CAT_CD <- factor(q4a$LAW_CAT_CD)
+
+Location = sqrt((q4a$Latitude^2) + (q4a$Longitude^2))
+q4a <- cbind(q4a, Location)
+
+#Borough Populations
+table(q4a$ARREST_BORO)
+Boroughs_List <- c('Bronx','Brooklyn','Manhattan','Queens','Staten')Boroughs_Pop <- c(1379946, 2590516, 1596273, 2278029, 491133)
+Boroughs_Arrests <- c(252, 285, 225, 197, 41)
+Boroughs_Pct <- Boroughs_Arrests / Boroughs_Pop 
+Boroughs <- data.frame(Boroughs_List, Boroughs_Pop, Boroughs_Arrests, Boroughs_Pct)
+colnames(Boroughs) <- c('Boroughs', 'Population', 'Arrests','ArrestPercentage')
+
+#Age Groups
+table(q4a$AGE_GROUP)
+Age_List <- c('<18', '18-24', '25-44', '45-64', '65+')
+Age_Pct <- c(6.06+5.48+5.82+5.46, 6.28, 8.8+8.38+7.06+6.42, 6.26+6.26+6.4+5.84, 4.8+3.96+2.76+1.96+2.06)
+Age_Val <- Age_Pct*(1/100)*8336817
+Age_Arrest <- c(40, 181, 577, 190, 12)
+Age_Pct <- Age_Arrest/Age_Val
+Age_per_Year <- Age_Val/c(17,6,19,19,20)
+Ages <- data.frame(Age_List, Age_Val, Age_Arrest, Age_Pct, Age_per_Year)
+colnames(Ages) <- c('Ages', 'Population', 'Arrests', 'ArrestPercentage', 'AgePerYear')
+
+#Race by Borough
+Staten <- c(11.6, 0.7, 12.4, 2.3, 18.7, 58.3)
+Manhattan <- c(18.5, 1.3, 13.2, 3.6, 26.4, 45.8)
+Queens <- c(20.7, 1.4, 27.5, 3.1, 28.1, 24.5)
+Brooklyn <- c(33.3, 1, 13, 2.8, 18.8, 37)
+Bronx <- c(43.8, 3.1, 5.1, 3.8, 56.4, 9)
+Races <- rep(c('Black', 'Native', 'AAPI', 'Other', 'Hispanic', 'White'), 5)
+Boroughs <- c(rep(c('Staten'), 6), rep(c('Manhattan'), 6), rep(c('Queens'), 6), rep(c('Brooklyn'), 6), rep(c('Bronx'), 6))
+Staten = Staten * 491133 * (1/100)
+Manhattan = Manhattan * 1596273 * (1/100)
+Queens = Queens * 2278029 * (1/100)
+Brooklyn = Brooklyn * 2590516 * (1/100)
+Bronx = Bronx * 1379946 * (1/100)
+RaceByBorough <- c(Staten, Manhattan, Queens, Brooklyn, Bronx)
+RaceByBorough <- cbind(RaceByBorough, Races, Boroughs)
+RaceByBorough <- data.frame(RaceByBorough)
+colnames(RaceByBorough) <- c('Population', 'Race', 'Borough')
+RaceByBorough$Population <- as.numeric(RaceByBorough$Population)	
+
+	#bar chart - arrest borough
+ggplot(q4a, aes(ARREST_BORO)) +
+ggtitle('Arrest Borough Bar Chart') +
+xlab('Arrest Borough') +
+ylab('Number of Arrests') +
+geom_bar()
+	#bar chart - borough population
+ggplot(Boroughs, aes(x=Boroughs, y=Population)) +
+ggtitle('Borough Population Bar Chart') +
+xlab('Borough') +
+ylab('Population') +
+geom_bar(stat='identity')
+	#bar chart - borough arrest percentage
+ggplot(Boroughs, aes(x=Boroughs, y=ArrestPercentage)) +
+ggtitle('Borough Arrest Percentage Bar Chart') +
+xlab('Borough') +
+ylab('Arrest Percentage') +
+geom_bar(stat='identity')
+
+	#histogram - arrest dates
+ggplot(q4a, aes(ARREST_DATE)) +
+ggtitle('Histogram of Arrest Dates') +
+xlab('Dates') +
+ylab('Number of Arrests') +
+geom_histogram(color='white')
+	#bar chart - law_cat_cd
+ggplot(q4a, aes(LAW_CAT_CD)) +
+ggtitle('Law Category Code Bar Chart') +
+xlab('Law Category Code') +
+ylab('Number of Arrests') +
+geom_bar() 
+	#bar chart - jurisdiction code
+ggplot(q4a, aes(JURISDICTION_CODE)) +
+ggtitle('Jurisdiction Code Bar Chart') +
+xlab('Jurisdiction Code') +
+ylab('Number of Arrests') +
+geom_bar()
+
+	#bar chart - age group - arrests
+ggplot(Ages, aes(x=Ages, y=Arrests)) +
+ggtitle('Arrests by Age Group Bar Chart') +
+xlab('Age Group') +
+ylab('Number of Arrests') +
+geom_bar(stat='identity') 
+	#bar chart - age group - population
+ggplot(Ages, aes(x=Ages, y=Population)) +
+ggtitle('Population by Age Group Bar Chart') +
+xlab('Age Group') +
+ylab('Population') +
+geom_bar(stat='identity') 
+	#bar chart - age group - population
+ggplot(Ages, aes(x=Ages, y=ArrestPercentage)) +
+ggtitle('Arrest Percentage by Age Group Bar Chart') +
+xlab('Age Group') +
+ylab('Arrest Percentage') +
+geom_bar(stat='identity') 
+	#bar chart - age group - per year
+ggplot(Ages, aes(x=Ages, y=AgePerYear)) +
+ggtitle('Population Per Age by Age Group Bar Chart') +
+xlab('Age Group') +
+ylab('Population') +
+geom_bar(stat='identity') 
+
+	#bar chart - perp sex
+ggplot(q4a, aes(PERP_SEX)) +
+ggtitle('Perpetrator Sex Bar Chart') +
+xlab('Perpetrator Sex') +
+ylab('Number of Arrests') +
+geom_bar() 
+
+	#bar chart - race - arrests
+ggplot(q4a, aes(PERP_RACE)) +
+ggtitle('Race Bar Chart - Arrests') +
+xlab('Race') +
+ylab('Number of Arrests') +
+geom_bar() +
+theme(axis.text.x = element_text(angle=90))
+	#bar chart - race - population
+ggplot(RaceByBorough, aes(x=Races, y=Population)) +
+ggtitle('Race Bar Chart - Population') +
+xlab('Race') +
+ylab('Population') +
+geom_bar(stat='identity') 
+
+	#bar chart - population - race & borough
+ggplot(RaceByBorough, aes(x=Races, y=Population, fill=Boroughs)) +
+ggtitle('Race by Borough Bar Chart - Population') +
+xlab('Race') +
+ylab('Population') +
+geom_bar(stat='identity', position='fill') 
+	#bar chart - arrests - race & borough
+ggplot(q4a, aes(PERP_RACE, fill=ARREST_BORO)) +
+ggtitle('Race by Borough Bar Chart - Arrests') +
+xlab('Race') +
+ylab('Number of Arrests') +
+geom_bar(position='fill') +
+theme(axis.text.x = element_text(angle=90))
+
+	#bar chart - arrests - race & borough
+ggplot(q4a, aes(ARREST_BORO, fill=PERP_RACE)) +
+ggtitle('Race by Borough Bar Chart - Arrests') +
+xlab('Arrest Borough') +
+ylab('Number of Arrests') +
+geom_bar(position='fill') 
+	#bar chart - population - race & borough
+ggplot(RaceByBorough, aes(x=Boroughs, y=Population, fill=Races)) +
+ggtitle('Race by Borough Bar Chart - Population') +
+xlab('Borough') +
+ylab('Population') +
+geom_bar(stat='identity', position='fill') 
+
+	#scatterplot - latitude & longitude
+ggplot(q4a, aes(-Latitude, Longitude, color=ARREST_BORO)) +
+ggtitle('Arrest Location Scatterplot') +
+xlab('Arrest Latitude') +
+ylab('Arrest Longitude') +
+geom_point() 
+
+	#density plot - Location & Borough
+ggplot(q4a, aes(Location, color=ARREST_BORO)) +
+ggtitle('Density Plot of Location') +
+xlab('Location') +
+ylab('Frequency') +
+geom_density() 
+
+#q4B
+
+q4b <- q4a[c('ARREST_DATE','LAW_CAT_CD','ARREST_BORO','JURISDICTION_CODE','AGE_GROUP','PERP_SEX','PERP_RACE','Location')]
+q4b$LAW_CAT_CD <- as.numeric(q4b$LAW_CAT_CD)
+	#1-F ; 2-I ; 3-M ; 4-V
+q4b$ARREST_BORO <- as.numeric(q4b$ARREST_BORO)
+	#1-B ; 2-K ; 3-M ; 4-Q ; 5-S
+q4b$JURISDICTION_CODE <- as.numeric(q4b$JURISDICTION_CODE)
+	#1-0 ; 2-1 ; 3-2 ; 4-3
+q4b$AGE_GROUP <- as.numeric(q4b$AGE_GROUP)
+	#1:<18 ; 2:18-24 ; 3:25-44 ; 4:45-64 ; 5:65+
+q4b$PERP_SEX <- as.numeric(q4b$PERP_SEX)
+	#1-F ; 2-M ; 3-U
+q4b$PERP_RACE <- as.numeric(q4b$PERP_RACE)
+	#1-AAPI ; 2-Black ; 3-Black Hispanic ; 4-Native ; 5-Unknown ; 6-White ; 7-White Hispanic
+
+training.rows = sample(nrow(q4b), size=(nrow(q4b)/2))
+train = q4b[training.rows,]
+test = q4b[-training.rows,]
+
+#Location
+	#CART 
+q4btree1 = tree(Location~., data=train)
+cv.q4btree1 <- cv.tree(q4btree1)
+plot(cv.q4btree1$size, cv.q4btree1$dev, type='b', main='Size vs Deviance', xlab='Size', ylab='Deviance')
+prune.q4btree1 = prune.tree(q4btree1, best=6)
+plot(prune.q4btree1) + title(main='Pruned CART - Location')
+text(prune.q4btree1)
+	#Yhat
+yhat1 = predict(q4btree1, newdata=test)
+plot(yhat1, test$Location, main='Predictive Ability of CART for Location', xlab='Predicted Location', ylab='Actual Location')
+with(test, table(round(yhat1,1),round(Location,1)))
+mean((yhat1 - test$Location)^2)
+
+
+#q4C
+
+xtrain = model.matrix(Location~ARREST_DATE+LAW_CAT_CD+ARREST_BORO+JURISDICTION_CODE+AGE_GROUP+PERP_SEX+PERP_RACE, train)
+ytrain = train$Location
+xtest = model.matrix((Location~ARREST_DATE+LAW_CAT_CD+ARREST_BORO+JURISDICTION_CODE+AGE_GROUP+PERP_SEX+PERP_RACE),data=test)
+ytest = test$Location
+	#Least Squares Regression
+lse = glmnet(xtrain, ytrain, lambda=0, alpha=0)
+lse.pred = predict(lse, s=0, newx=xtest, type='response')
+predict(lse, s=0, newx=xtest, type='coefficient')
+	#Ridge 
+cv.out = cv.glmnet(xtrain, ytrain, alpha=0)
+bestlam = cv.out$lambda.min
+ridge = glmnet(xtrain, ytrain, lambda=bestlam, alpha=0)
+ridge.pred = predict(ridge, s=bestlam, newx=xtest, type='response')
+bestlam
+predict(ridge, s=bestlam, newx=xtest, type='coefficient')
+	#Lasso Regression
+cv.out = cv.glmnet(xtrain, ytrain, alpha=1)
+bestlam = cv.out$lambda.min
+lasso = glmnet(xtrain, ytrain, lambda=bestlam, alpha=1)
+lasso.pred = predict(lasso, s=bestlam, newx=xtest, type='response')
+bestlam
+predict(lasso, s=bestlam, newx=xtest, type='coefficient')
+
+#q4D
+	#Compare	 MSE
+mean((lse.pred - ytest)^2) 
+mean((ridge.pred - ytest)^2)	
+mean((lasso.pred - ytest)^2)	
+
+	#density plot - Location & Race
+ggplot(subset(q4a, (PERP_RACE!='NATIVE')&(PERP_RACE!='UNKNOWN')), aes(Location, color=PERP_RACE)) +
+ggtitle('Density Plot of Location') +
+xlab('Location') +
+ylab('Frequency') +
+geom_density() 
+	#density plot - Location 
+ggplot(q4a) +
+ggtitle('Density Plot of Location') +
+xlab('Location') +
+ylab('Frequency') +
+geom_density(aes(Location))
+	#Scatterplot - Location, Race, Borough
+ggplot(q4a, aes(Location, PERP_RACE, shape=ARREST_BORO, color=ARREST_BORO)) +
+ggtitle('Arrest Location By Race') +
+xlab('Arrest Location') +
+ylab('Race') +
+geom_jitter() +
+scale_fill_discrete(name='Race')
+
+Bronx = subset(q4b, ARREST_BORO==1)
+Brooklyn = subset(q4b, ARREST_BORO==2)
+Manhattan = subset(q4b, ARREST_BORO==3)
+Queens = subset(q4b, ARREST_BORO==4)
+Staten = subset(q4b, ARREST_BORO==5)
+
+CARTLoc <- c()
+for(i in 1:length(q4b$ARREST_BORO)){
+	if(q4b$ARREST_BORO[i]==1){
+		CARTLoc[i]=84.43
+	}
+	if(q4b$ARREST_BORO[i]==2){
+		CARTLoc[i]=84.39		
+	}
+	if(q4b$ARREST_BORO[i]==3){
+		CARTLoc[i]=84.46	
+	}
+	if(q4b$ARREST_BORO[i]==4){
+		CARTLoc[i]=84.51	
+	}
+	if(q4b$ARREST_BORO[i]==5){
+		if(q4b$PERP_RACE[i]<4){
+			CARTLoc[i]=84.29}
+		else if(q4b$PERP_RACE[i]>3){
+			CARTLoc[i]=84.35
+		}
+	}
+}
+q4d = cbind(CARTLoc, q4b$Location)
+q4d = data.frame(q4d)
+colnames(q4d) = c('CARTLoc', 'Location')
+q4d = q4d[sample(1:nrow(q4d),500),]
+
+lse.error = (lse.pred - ytest)^2
+ridge.error = (ridge.pred - ytest)^2
+lasso.error = (lasso.pred - ytest)^2
+cart.error = (yhat1 - test$Location)^2
+
+ggplot() +
+ggtitle('Arrest Location versus Predictions') +
+xlab('Arrest Location') +
+ylab('Predicted Location') +
+geom_point(aes(ytest, lse.pred), color='orangered1', alpha=0.5, size=0.2) +
+geom_point(aes(ytest, ridge.pred), color='darkolivegreen4', alpha=0.5, size=0.2) +
+geom_point(aes(ytest, lasso.pred), color='steelblue4', alpha=0.5, size=0.2) +
+geom_point(aes(q4d$Location, q4d$CARTLoc), color='violetred4', alpha=0.5, size=0.2) +
+geom_point(aes(ytest, ytest), color='black', alpha=0.5, size=0.2) 
+
+ggplot() +
+ggtitle('Arrest Location versus Error Predictions') +
+xlab('Arrest Location') +
+ylab('Prediction Error') +
+geom_point(aes(ytest, lse.error), color='orangered1', alpha=0.5, size=0.5) +
+geom_point(aes(ytest, ridge.error), color='darkolivegreen4', alpha=0.5, size=0.5) +
+geom_point(aes(ytest, lasso.error), color='steelblue4', alpha=0.5, size=0.5) +
+geom_point(aes(test$Location, cart.error), color='violetred4', alpha=0.5, size=0.5) +
+
+whitehispanicqueens <- subset(q4a, (Location>84.32) & (PERP_RACE=='WHITE HISPANIC') & (ARREST_BORO=='Q'))
+plot(whitehispanicqueens$Latitude, whitehispanicqueens$Longitude)
+
+names(q4a)[13] <- 'Race'
+names(q4a)[8] <- 'Borough'
+ggplot(q4a, aes(Location, Race, shape=Borough, color=Borough)) +
+ggtitle('Arrest Location By Race') +
+xlab('Arrest Location') +
+ylab('Race') +
+geom_jitter() 
