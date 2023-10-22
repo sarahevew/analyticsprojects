@@ -11,7 +11,8 @@ q1d <- file.choose() #Weinflash Sarah Project - Q1D.csv
 q1d <- read.csv(q1d)
 q1d <- na.omit(q1d)
 q1d <- q1d[,1:6]
-q1d$Date <- as.Date(q1d$Date, format='%m/%d/%y')pairs(q1d)
+q1d$Date <- as.Date(q1d$Date, format='%m/%d/%y')
+pairs(q1d)
 
 #Q2A
 
@@ -563,7 +564,8 @@ q4a <- cbind(q4a, Location)
 
 #Borough Populations
 table(q4a$ARREST_BORO)
-Boroughs_List <- c('Bronx','Brooklyn','Manhattan','Queens','Staten')Boroughs_Pop <- c(1379946, 2590516, 1596273, 2278029, 491133)
+Boroughs_List <- c('Bronx','Brooklyn','Manhattan','Queens','Staten')
+Boroughs_Pop <- c(1379946, 2590516, 1596273, 2278029, 491133)
 Boroughs_Arrests <- c(252, 285, 225, 197, 41)
 Boroughs_Pct <- Boroughs_Arrests / Boroughs_Pop 
 Boroughs <- data.frame(Boroughs_List, Boroughs_Pop, Boroughs_Arrests, Boroughs_Pct)
